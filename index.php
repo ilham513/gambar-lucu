@@ -1,210 +1,179 @@
-<!--
- Your First PWA Codelab (https://g.co/codelabs/pwa)
+<!doctype html>
+<html lang='en'>
+	<head>
+		<meta charset='utf-8'>
+		<meta http-equiv='X-UA-Compatible' content='IE=edge'>
+		<meta name='viewport' content='width=device-width, initial-scale=1.0'>
 
- Copyright 2019 Google Inc.
+		<title>Progressive Web App Template</title>
+		<meta name='description' content='PWA Template'>
+		<meta name='author' content='Mark Hewitt www.mh1.co'>
+		<meta name='robot' content='noindex, nofollow' />
+		<meta name='theme-color' content='#2e3135'>
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+		<!-- Add to home screen for Safari on iOS -->
+		<meta name='apple-mobile-web-app-capable' content='yes'>
+		<meta name='apple-mobile-web-app-status-bar-style' content='black'>
+		<meta name='apple-mobile-web-app-title' content='PWA Template'>
+		<link rel='apple-touch-icon' href='/assets/images/launcher-icon-3x.png'>
+		<meta name='msapplication-TileImage' content='/assets/images/launcher-icon-3x.png'>
+		<meta name='msapplication-TileColor' content='#2e3135'>
 
-      http://www.apache.org/licenses/LICENSE-2.0
+		<link rel='manifest' href='/manifest.json'>
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
+		<link rel='stylesheet' type='text/css' href='/assets/css/style.css'>
+	</head>
+	<body>
+		<div class='logo'>
+			<div class='beginning'>SMS</div>
+			<div class='loader'>
+				<div class='blue'>
+					<div class='red'></div>
+				</div>
+			</div>
+			<div class='ending'>group</div>
+		</div><br>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather PWA</title>
-  <meta name="codelab" content="your-first-pwa-v3">
-  <link rel="stylesheet" type="text/css" href="/styles/inline.css">
-  <link rel="icon" href="/images/favicon.ico" type="image/x-icon" />
+		<?=time()?>
+		
+        <button type="button" onclick="registerOneTimeSync()">One Time Sync</button>
 
-  <!-- CODELAB: Add link rel manifest -->
-  <!-- CODELAB: Add iOS meta tags and icons -->
-  <!-- CODELAB: Add description here -->
-  <!-- CODELAB: Add meta theme-color -->
+		<div class='offline-banner'>You are currently offline. While you can view your data, you cannot edit it. Please reconnect to a network in order to proceed.</div>
+		<script>
+			/* SERVICE WORKER - REQUIRED */
+				if ('serviceWorker' in navigator)
+				{
+					navigator.serviceWorker
+					.register('./sw.js')
+					.then(function(reg) {
+						console.log("ServiceWorker registered ◕‿◕", reg);
+					})
+					.catch(function(error) {
+						console.log("Failed to register ServiceWorker ಠ_ಠ", error);
+					});
+				}
 
-</head>
-<body>
+function registerOneTimeSync() {
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then(function(reg) {
+            if (reg.sync) {
+                reg.sync.register({
+                        tag: 'oneTimeSync'
+                    })
+                    .then(function(event) {
+                        console.log('Sync registration successful', event);
+                    })
+                    .catch(function(error) {
+                        console.log('Sync registration failed', error);
+                    });
+            } else {
+                console.log("Onw time Sync not supported");
+            }
+        });
+    } else {
+        console.log("No active ServiceWorker");
+    }
+}
 
-  <header class="header">
-    <h1>
-      Weather PWA
-      <a href="https://darksky.net/poweredby/" class="powered-by">
-        Powered by Dark Sky
-      </a>
-    </h1>
-    <button id="butInstall" aria-label="Install" hidden></button>
-    <button id="butRefresh" aria-label="Refresh"></button>
-  </header>
+			/* OFFLINE BANNER */
+				function updateOnlineStatus()
+				{
+					var d = document.body;
+					d.className = d.className.replace(/\ offline\b/,'');
 
-  <main class="main">
+					if (!navigator.onLine)
+					{
+						d.className += " offline";
+					}
+				}
 
-    <button id="butAdd" class="fab" aria-label="Add">
-      <span class="icon add"></span>
-    </button>
+				updateOnlineStatus();
+				window.addEventListener
+				(
+					'load',
+					function()
+					{
 
-    <div id="about" class="weather-card">
-      <b>Your First Progressive Web App Codelab</b><br>
-      Get started at <a href="https://g.co/codelabs/pwa">https://g.co/codelabs/pwa</a>.
-    </div>
+						window.addEventListener('online',  updateOnlineStatus);
+						window.addEventListener('offline', updateOnlineStatus);
+					}
+				);
 
-    <div id="weather-template" class="weather-card" hidden>
-      <div class="card-spinner">
-        <svg viewBox="0 0 32 32" width="32" height="32">
-          <circle cx="16" cy="16" r="14" fill="none"></circle>
-        </svg>
-      </div>
-      <button class="remove-city">&times;</button>
-      <div class="city-key" hidden></div>
-      <div class="card-last-updated" hidden></div>
-      <div class="location">&nbsp;</div>
-      <div class="date">&nbsp;</div>
-      <div class="description">&nbsp;</div>
-      <div class="current">
-        <div class="visual">
-          <div class="icon"></div>
-          <div class="temperature">
-            <span class="value"></span><span class="scale">°F</span>
-          </div>
-        </div>
-        <div class="description">
-          <div class="humidity">
-            <span class="label">Humidity:</span>
-            <span class="value"></span><span class="scale">%</span>
-          </div>
-          <div class="wind">
-            <span class="label">Wind:</span>
-            <span class="value"></span>
-            <span class="scale">mph</span>
-            <span class="direction"></span>°
-          </div>
-          <div class="sunrise">
-            <span class="label">Sunrise:</span>
-            <span class="value"></span>
-          </div>
-          <div class="sunset">
-              <span class="label">Sunset:</span>
-              <span class="value"></span>
-            </div>
-        </div>
-      </div>
-      <div class="future">
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-        <div class="oneday">
-          <div class="date"></div>
-          <div class="icon"></div>
-          <div class="temp-high">
-            <span class="value"></span>°
-          </div>
-          <div class="temp-low">
-            <span class="value"></span>°
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+			/* CHANGE PAGE TITLE BASED ON PAGE VISIBILITY */
+				function handleVisibilityChange()
+				{
+					if (document.visibilityState == "hidden")
+					{
+						document.title = "Hey! Come back!";
+					}
+					else
+					{
+						document.title = original_title;
+					}
+				}
+				var original_title = document.title;
+				document.addEventListener('visibilitychange', handleVisibilityChange, false);
 
-  <div id="addDialogContainer">
-    <div class="dialog">
-      <div class="dialog-title">Add new city</div>
-      <div class="dialog-body">
-        <select id="selectCityToAdd" aria-label="City to add">
-          <!--
-            Values are lat/lon values, use Google Maps to find and add
-            additional cities.
-          -->
-          <option value="28.6472799,76.8130727">Dehli, India</option>
-          <option value="-5.7759362,106.1174957">Jakarta, Indonesia</option>
-          <option value="51.5287718,-0.2416815">London, UK</option>
-          <option value="40.6976701,-74.2598666">New York, USA</option>
-          <option value="48.8589507,2.2770202">Paris, France</option>
-          <option value="-64.8251018,-63.496847">Port Lockroy, Antarctica</option>
-          <option value="37.757815,-122.5076401">San Francisco, USA</option>
-          <option value="31.2243085,120.9162955">Shanghai, China</option>
-          <option value="35.6735408,139.5703032">Tokyo, Japan</option>
-        </select>
-      </div>
-      <div class="dialog-buttons">
-        <button id="butDialogCancel" class="button">Cancel</button>
-        <button id="butDialogAdd" class="button">Add</button>
-      </div>
-    </div>
-  </div>
+			/* NOTIFICATIONS */
+				window.addEventListener('load', function ()
+				{
+					// At first, let's check if we have permission for notification
+					// If not, let's ask for it
+					if (window.Notification && Notification.permission !== "granted")
+					{
+						Notification.requestPermission(function (status)
+						{
+							if (Notification.permission !== status)
+							{
+								Notification.permission = status;
+							}
+						});
+					}
+				});
+				function notifyMe(alert_title, alert_body)
+				{
+					var options =
+					{
+						body: alert_body,
+						icon: 'assets/images/launcher-icon-4x.png',
+					}
 
-  <script src="/scripts/luxon-1.11.4.js"></script>
-  <script src="/scripts/app.js"></script>
-  <!-- CODELAB: Add the install script here -->
-  <script>
-    // CODELAB: Register service worker.
-  </script>
+					// Let's check if the browser supports notifications
+					if (!("Notification" in window))
+					{
+						alert("This browser does not support system notifications");
+						return false;
+					}
 
-</body>
+					// Let's check whether notification permissions have already been granted
+					else if (Notification.permission === "granted")
+					{
+						// If it's okay let's create a notification
+						var notification = new Notification(alert_title,options);
+						return true;
+					}
+
+					// Otherwise, we need to ask the user for permission
+					else if (Notification.permission !== 'denied')
+					{
+						Notification.requestPermission(function (permission)
+						{
+							// If the user accepts, let's create a notification
+							if (permission === "granted")
+							{
+								var notification = new Notification(alert_title,options);
+								return true;
+							}
+						});
+					}
+
+					// Finally, if the user has denied notifications and you 
+					// want to be respectful there is no need to bother them any more.
+					console.log("Notifications denied");
+					return false;
+				}
+				//Usage:
+				//notifyMe("Title goes here", "Body text goes here");
+		</script>
+	</body>
 </html>
