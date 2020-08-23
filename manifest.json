@@ -3,7 +3,7 @@
   "short_name": "PWA Template",
   "description": "A simple template for PWAs.",
   "lang": "en-US",
-  "start_url": ".",
+  "start_url": "?utm_source=homescreen",
   "display": "standalone",
   "theme_color": "#2e3135",
   "background_color": "#2e3135",

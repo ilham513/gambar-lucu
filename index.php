@@ -22,6 +22,14 @@
 		<link rel='manifest' href='/manifest.json'>
 
 		<link rel='stylesheet' type='text/css' href='/assets/css/style.css'>
+		
+		<style>
+		.add-button {
+		  position: absolute;
+		  top: 1px;
+		  left: 1px;
+		}
+		</style>
 	</head>
 	<body>
 		<div class='logo'>
@@ -37,9 +45,37 @@
 		<?=time()?>
 		
         <button type="button" onclick="registerOneTimeSync()">One Time Sync</button>
+		
+		<button class="add-button">Add to home screen</button>
 
 		<div class='offline-banner'>You are currently offline. While you can view your data, you cannot edit it. Please reconnect to a network in order to proceed.</div>
 		<script>
+		
+		window.addEventListener('beforeinstallprompt', (e) => {
+		  // Prevent Chrome 67 and earlier from automatically showing the prompt
+		  e.preventDefault();
+		  // Stash the event so it can be triggered later.
+		  deferredPrompt = e;
+		  // Update UI to notify the user they can add to home screen
+		  addBtn.style.display = 'block';
+
+		  addBtn.addEventListener('click', (e) => {
+			// hide our user interface that shows our A2HS button
+			addBtn.style.display = 'none';
+			// Show the prompt
+			deferredPrompt.prompt();
+			// Wait for the user to respond to the prompt
+			deferredPrompt.userChoice.then((choiceResult) => {
+				if (choiceResult.outcome === 'accepted') {
+				  console.log('User accepted the A2HS prompt');
+				} else {
+				  console.log('User dismissed the A2HS prompt');
+				}
+				deferredPrompt = null;
+			  });
+		  });
+		});
+		
 			/* SERVICE WORKER - REQUIRED */
 				if ('serviceWorker' in navigator)
 				{
